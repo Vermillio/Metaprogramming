@@ -19,6 +19,28 @@ html_main ="""
 </html>
 """
 
+class C_Object:
+	name = ""
+	comment = ""
+	declarations = list()
+	functions = list()
+
+	def __init__(self, name, comment, declarations, functions):
+		self.name = name
+		self.comment = comment
+		self.declarations = declarations
+		self.functions = functions
+
+
+class Declaration:
+	comment = ""
+	name = ""
+
+	def __init__(self, name, comment):
+		self.name = name
+		self.comment = comment
+
+
 class Directory:
 	def __init__(self, name, link):
 		self.name = name
@@ -35,7 +57,7 @@ def checkExtension(filename):
 	return filename.endswith(extensions)
 
 def generateDirPage(directory, files, md):
-	body = makeFilesList(directory, files)
+	body = createFilesList(directory, files)
 	m = """	    %s
 		  		<h4>%s</h4>
 	"""
@@ -43,7 +65,7 @@ def generateDirPage(directory, files, md):
 	t=html_main % m
 	return t % (body, md.replace("\n", "<br />"))
 
-def makeFilesList(directory, files):
+def createFilesList(directory, files):
 	content = "\n".join([createLinkDirFile(directory, file) for file in files])
 	return """
 	<ul>
@@ -72,12 +94,12 @@ def randomString(stringLength=10):
     letters = string.ascii_lowercase
     return ''.join(random.choice(letters) for i in range(stringLength))
 
-def generateIndex(projectName, rootPage, directory):
-	referencesContent = makeDirectoryHierachy(directory) if isinstance(directory, Directory) else createReferenceLink(directory)
+def generate_index(projectName, rootPage, directory):
+	referencesContent = createDirectoryHierachy(directory) if isinstance(directory, Directory) else createReferenceLink(directory)
 	html="""
 	  	<h1>%s</h1>
 	  	<p>C documentation generator</p>
-	  	<p style="font-size: 0.75em">Generation date: %s</p>
+	  	<p>Generation date: %s</p>
 	  	<h3><a href="%s">Project Documentation</a></h3>
 	  	<h3><a href="references.html">Objects References</a></h3>
 
@@ -87,10 +109,10 @@ def generateIndex(projectName, rootPage, directory):
 	t= html_main % html
 	return t % (projectName, date.today(), rootPage, referencesContent)
 
-def makeDirectoryHierachy(directory):
-	directoryContent = "\n".join([makeDirectoryHierachy(file) if isinstance(file, Directory) else createLinkedItem(file) for file in directory.files])
-	idHead = randomString()
-	idCollapse = randomString()
+def createDirectoryHierachy(directory):
+	directoryContent = "\n".join([createDirectoryHierachy(file) if isinstance(file, Directory) else createLinkedItem(file) for file in directory.files])
+	id1 = randomString()
+	id2 = randomString()
 	return """
 	<div>
          <div id="%s">
@@ -106,10 +128,10 @@ def makeDirectoryHierachy(directory):
             </div>
          </div>
     </div>
-	""" % (idHead, idCollapse, idCollapse, directory.name, directory.link, idHead, idCollapse, idHead, directoryContent)
+	""" % (id1, id2, id2, directory.name, directory.link, id1, id2, id1, directoryContent)
 
 def createLinkedItem(file):
-	idHead = randomString()
+	id1 = randomString()
 	return """
 	<div>
          <div id="%s">
@@ -118,28 +140,8 @@ def createLinkedItem(file):
             </h5>
         </div>
     </div>
-	""" % (idHead, file.link, idHead, file.name)
+	""" % (id1, file.link, id1, file.name)
 
-class C_Object:
-	name = ""
-	comment = ""
-	declarations = list()
-	functions = list()
-
-	def __init__(self, name, comment, declarations, functions):
-		self.name = name
-		self.comment = comment
-		self.declarations = declarations
-		self.functions = functions
-
-
-class Declaration:
-	comment = ""
-	name = ""
-
-	def __init__(self, name, comment):
-		self.name = name
-		self.comment = comment
 
 def generateFilePage(fileComment, objects):
 	body = "\n".join([objectToHtml(object) + "\n" for object in objects])
@@ -152,7 +154,7 @@ def generateFilePage(fileComment, objects):
 
 def objectToHtml(object):
 	content = listFunctions(object.functions)
-	declarations = makeDeclarations(object.declarations)
+	declarations = createDeclarations(object.declarations)
 	return """
 	<div>
 	  <div> %s</div>
@@ -164,7 +166,7 @@ def objectToHtml(object):
 	</div>
 	""" % (object.comment.replace(' /// ', '<br> /').replace(' // ', '<br> /'), object.name, declarations, content)
 
-def makeDeclarations(declarations):
+def createDeclarations(declarations):
 	content = "\n".join([createItem(declaration) for declaration in declarations])
 	return """
 	<div>
@@ -196,8 +198,8 @@ def function_to_html(function):
 
 	""" % (id, id, function.name.replace('<', '&lt'), function.comment.replace('///', '<br>').replace('//', '<br>'))
 
-def generateReferences(references):
-	referencesContent = makeReferencesList(references)
+def generate_references(references):
+	referencesContent = createReferencesList(references)
 	html=	"""
 			<h1>Objects references:</h1>
 
@@ -205,7 +207,7 @@ def generateReferences(references):
 	"""
 	return html_main % html % (referencesContent)
 
-def makeReferencesList(references):
+def createReferencesList(references):
 	content = "\n".join([createReferenceLink(reference) for reference in references])
 	return """
 	<ul>

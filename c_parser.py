@@ -3,7 +3,7 @@ import os
 from html_converter import *
 
 # function remove all bodies from functions and inner objects
-def removeBody(text):
+def remove_body(text):
 	newText = ""
 	prevText = ""
 	level = 0
@@ -92,12 +92,12 @@ def getObjects(text):
 	return comments, objects
 
 def parse_file(prefix, path, workingDirectory, name):
-	filename = '%s%s' % (prefix + path[:-1], name)
+	filename = '%s%s' % (prefix + path, name)
 	print("file %s" % filename)
 	file = open(filename, mode='r')
 	text = file.read()
 	file.close()
-	(fileComment, objects) = getObjects(removeBody(text))
+	(fileComment, objects) = getObjects(remove_body(text))
 
 	text = generateFilePage(fileComment, objects)
 	pageName = '%s/%s%s.html' % (workingDirectory, path, name)

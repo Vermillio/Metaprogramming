@@ -9,7 +9,7 @@ def lookupMD(path, files):
 	for file in files:
 		fullname = (path + "/" + file)
 		if isfile(fullname) and (fullname).endswith(".md"):
-			readme = open(fullname, mode="r")
+			readme = open(fullname)
 			text = readme.read()
 			readme.close()
 			return text
@@ -26,29 +26,29 @@ def getFilesAndDirs(path):
 	return res
 
 def parse_dir(prefix, path, workingDirectory):
-	references = dict()
+	refs = dict()
 	allPath = prefix + path
 	md = ""
 	if isfile(allPath) and checkExtension(allPath):
 		name = basename(path)
 		path = dirname(path) + "/"
-		references.update(parse_file(prefix, path + "/", workingDirectory, name))
-		return references, File(basename(allPath),'%s/%s%s.html' % (workingDirectory, path, name))
+		refs.update(parse_file(prefix, path + "/", workingDirectory, name))
+		return refs, File(basename(allPath),'%s/%s%s.html' % (workingDirectory, path, name))
 	elif isdir(allPath):
 		directory = Directory(basename(allPath), workingDirectory + "/" + path + ".html")
 		if not exists(workingDirectory + "/" + path):
 			mkdir(workingDirectory + "/" + path)
 		files = listdir(allPath + "/")
-		file = open(workingDirectory + "/" + path + ".html", mode="w")
+		file = open(workingDirectory + "/" + path + ".html")
 		md = lookupMD(allPath, files)
 		file.write(generateDirPage(basename(path), getFilesAndDirs(allPath), md))
 		file.close()
 		for file in files:
 			filereferences, fileObj = parse_dir(prefix, path + "/" + file, workingDirectory)
-			references.update(filereferences)
+			refs.update(filereferences)
 			if fileObj is not None:
 				directory.files.append(fileObj)
-		return references, directory
+		return refs, directory
 	else:
 		return  dict(), None
 
@@ -62,20 +62,20 @@ def parse_project(projectPath, outputPath):
 
 	if isfile(projectPath) and checkExtension(projectPath):
 		path = "/" if len(dirname(projectPath)) > 0 else ""
-		references = parse_file(dirname(projectPath), path, outputPath, basename(projectPath))
+		refs = parse_file(dirname(projectPath), path, outputPath, basename(projectPath))
 		rootDirectory = File(basename(projectPath),'%s.html' % (outputPath + '/' + basename(projectPath)))
 		rootProject = outputPath + "/" + projectName + ".html"
 	else:
-		references, rootDirectory = parse_dir(prefix, projectName, outputPath)
+		refs, rootDirectory = parse_dir(prefix, projectName, outputPath)
 		rootProject = outputPath + "/" + projectName + ".html"
-	sorted_references = sorted(references.items(), key=lambda kv: kv[0])
-	index = generate_index(projectName, rootProject, rootDirectory)
-	page = open(outputPath+"/index.html", mode='w')
-	page.write(index)
+	sorted_references = sorted(refs.items(), key=lambda kv: kv[0])
+	main_page = generate_main_page(projectName, rootProject, rootDirectory)
+	page = open("main_page.html")
+	page.write(main_page)
 	page.close()
-	refFile = open(outputPath+"/object_references.html", mode='w')
-	refFile.write(generate_references(sorted_references))
-	refFile.close()
+	r = open("refs.html")
+	r.write(generate_references(sorted_references))
+	r.close()
 
 
 parser = argparse.ArgumentParser()
@@ -83,4 +83,3 @@ parser.add_argument("--src", help="Path to generate C documentation from", requi
 parser.add_argument("--dest", help="Path to save result", required=True)
 args = parser.parse_args()
 parse_project(args.src, args.dest)
-exit()
