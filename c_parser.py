@@ -1,5 +1,6 @@
 import re
 import os
+from html_converter import *
 
 # function remove all bodies from functions and inner objects
 def removeBody(text):
@@ -51,8 +52,8 @@ objPattern=r"\A[\t ]*(?:(?:typedef|const)[\t ]+)*((?:struct|enum)[\t ]+([A-Za-z_
 
 def getObjects(text):
 	objects=[]
-	globalObject = GlobalObject("Global", "", list(), list())
-	objects.append(globalObject)
+	C_Object = C_Object("Global", "", list(), list())
+	objects.append(C_Object)
 	multilineComments=re.finditer(commentMultilinePattern, text, flags=re.MULTILINE)
 	startComment = re.search("\A\s*("+commentMultilinePattern+")", text, flags=re.MULTILINE)
 	endComment=re.search("\A\s*("+commentMultilinePattern+")", text[::-1], flags=re.MULTILINE)
@@ -73,24 +74,24 @@ def getObjects(text):
 
 		functionMatch = re.search(funcPattern, currentText )
 		if functionMatch:
-			next = Object(functionMatch.group(), comm.groups()[0] if len(comm.groups()[0]) > 0  else "No comment")
-			globalObject.functions.append(next)
+			next = Declaration(functionMatch.group(), comm.groups()[0] if len(comm.groups()[0]) > 0  else "No comment")
+			C_Object.functions.append(next)
 		else:
 			objectMatch = re.search(objPattern, currentText)
 			if objectMatch:
-				next = GlobalObject(objectMatch.group(), comm.groups()[0] if len(comm.groups()[0]) > 0 else "No comment", list(), list())
+				next = C_Object(objectMatch.group(), comm.groups()[0] if len(comm.groups()[0]) > 0 else "No comment", list(), list())
 				objects.append(next)
-				globalObject.declarations.append(objectMatch.groups()[0])
+				C_Object.declarations.append(objectMatch.groups()[0])
 			else:
 				comments = '\n'.join([comments, comm.groups()[0]])
 
 	# search comments and use it as file description
 	comments='\n'.join(re.findall(commentPattern, ''.join(textWithoutMultilineComments)))
-	globalObject.comment = '\n'.join([startComment.groups()[0] if startComment is not None else '', comments, startComment.groups()[0] if endComment is not None else ''])
+	C_Object.comment = '\n'.join([startComment.groups()[0] if startComment is not None else '', comments, startComment.groups()[0] if endComment is not None else ''])
 
 	return comments, objects
 
-def parseFile(prefix, path, workingDirectory, name):
+def parse_file(prefix, path, workingDirectory, name):
 	filename = '%s%s' % (prefix + path, name)
 	print("Parsing file %s" % filename)
 	file = open(filename, mode='r')
@@ -107,5 +108,3 @@ def parseFile(prefix, path, workingDirectory, name):
 	classReference = list(filter(lambda o: not o.name.find("Global") != -1, objects))
 	processedReferences = { getObjectName(o.name): pageName for o in classReference }
 	return dict(processedReferences)
-
-print(parseFile("example_c_file.c"))
