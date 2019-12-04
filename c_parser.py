@@ -52,8 +52,8 @@ objPattern=r"\A[\t ]*(?:(?:typedef|const)[\t ]+)*((?:struct|enum)[\t ]+([A-Za-z_
 
 def getObjects(text):
 	objects=[]
-	C_Object = C_Object("Global", "", list(), list())
-	objects.append(C_Object)
+	globalObj = C_Object("Global", "", list(), list())
+	objects.append(globalObj)
 	multilineComments=re.finditer(commentMultilinePattern, text, flags=re.MULTILINE)
 	startComment = re.search("\A\s*("+commentMultilinePattern+")", text, flags=re.MULTILINE)
 	endComment=re.search("\A\s*("+commentMultilinePattern+")", text[::-1], flags=re.MULTILINE)
@@ -75,25 +75,25 @@ def getObjects(text):
 		functionMatch = re.search(funcPattern, currentText )
 		if functionMatch:
 			next = Declaration(functionMatch.group(), comm.groups()[0] if len(comm.groups()[0]) > 0  else "No comment")
-			C_Object.functions.append(next)
+			globalObj.functions.append(next)
 		else:
 			objectMatch = re.search(objPattern, currentText)
 			if objectMatch:
 				next = C_Object(objectMatch.group(), comm.groups()[0] if len(comm.groups()[0]) > 0 else "No comment", list(), list())
 				objects.append(next)
-				C_Object.declarations.append(objectMatch.groups()[0])
+				globalObj.declarations.append(objectMatch.groups()[0])
 			else:
 				comments = '\n'.join([comments, comm.groups()[0]])
 
 	# search comments and use it as file description
 	comments='\n'.join(re.findall(commentPattern, ''.join(textWithoutMultilineComments)))
-	C_Object.comment = '\n'.join([startComment.groups()[0] if startComment is not None else '', comments, startComment.groups()[0] if endComment is not None else ''])
+	globalObj.comment = '\n'.join([startComment.groups()[0] if startComment is not None else '', comments, startComment.groups()[0] if endComment is not None else ''])
 
 	return comments, objects
 
 def parse_file(prefix, path, workingDirectory, name):
-	filename = '%s%s' % (prefix + path, name)
-	print("Parsing file %s" % filename)
+	filename = '%s%s' % (prefix + path[:-1], name)
+	print("file %s" % filename)
 	file = open(filename, mode='r')
 	text = file.read()
 	file.close()

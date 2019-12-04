@@ -69,12 +69,12 @@ def parse_project(projectPath, outputPath):
 		references, rootDirectory = parse_dir(prefix, projectName, outputPath)
 		rootProject = outputPath + "/" + projectName + ".html"
 	sorted_references = sorted(references.items(), key=lambda kv: kv[0])
-	index = generateIndex(projectName, rootProject, rootDirectory)
-	page = open("index.html", mode='w')
+	index = generate_index(projectName, rootProject, rootDirectory)
+	page = open(outputPath+"/index.html", mode='w')
 	page.write(index)
 	page.close()
-	refFile = open("references.html", mode='w')
-	refFile.write(generateReferences(sorted_references))
+	refFile = open(outputPath+"/object_references.html", mode='w')
+	refFile.write(generate_references(sorted_references))
 	refFile.close()
 
 
